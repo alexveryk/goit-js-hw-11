@@ -1,2 +1,7 @@
-@import './common';
-@import './example';
+@import './base/reset';
+@import './base/modern-normalize';
+
+@import './components/container';
+
+@import './layout/header';
+@import './layout/main';
