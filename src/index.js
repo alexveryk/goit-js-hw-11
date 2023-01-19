@@ -1,8 +1,3 @@
-// фунція яка рообить запит на сервер
-// функція яка робить розітку на підставі даних отриманих з сервера
-// функія пагінації
-// фунція дамальовк нових зображень
-
 import axios from 'axios';
 import SimpleLightbox from 'simplelightbox';
 import 'simplelightbox/dist/simple-lightbox.min.css';
@@ -21,15 +16,20 @@ const API_KEY = '32765009-e8a3776ebed1bf95519eebcf0';
 let page = 1;
 let searchImg = '';
 
-async function onSearch(evt) {
+function onSearch(evt) {
   evt.preventDefault();
 
   searchImg = evt.target.searchQuery.value;
-  gallery.innerHTML = '';
-  page = 1;
-  await getImages(searchImg);
-  page += 1;
-  // setTimeout();
+  if (!searchImg) {
+    Notiflix.Notify.warning(
+      'The input field is empty, enter the value for the search'
+    );
+  } else {
+    gallery.innerHTML = '';
+    page = 1;
+    getImages(searchImg);
+    page += 1;
+  }
 }
 
 function onLoadMore(evt) {
@@ -42,6 +42,8 @@ function onLoadMore(evt) {
 
 async function getImages(img) {
   console.log(img);
+  const perPage = 40;
+
   try {
     const response = await axios.get(`${BASE_URL}?q=${img}`, {
       params: {
@@ -49,12 +51,28 @@ async function getImages(img) {
         image_type: 'photo',
         orientation: 'horizontal',
         safesearch: true,
-        per_page: 40,
+        per_page: perPage,
         page: page,
       },
     });
 
+    let totalHits = response.data.totalHits;
+
+    let endPage = totalPages(totalHits, perPage);
+
+    if (page > endPage) {
+      Notiflix.Notify.failure(
+        "We're sorry, but you've reached the end of search results."
+      );
+      setTimeout(() => {
+        loadMore.classList.add('is-hidden');
+      }, 1500);
+    }
+
     getMurkup(response.data.hits);
+
+    const responseRequest = response.data.hits;
+    LoadMoreBtn(responseRequest);
   } catch (error) {
     console.error(error);
   }
@@ -63,12 +81,19 @@ async function getImages(img) {
 function getMurkup(err) {
   const murkup = err
     .map(
-      ({ largeImageURL, webformatURL, likes, views, comments, downloads }) => {
-        return `
+      ({
+        largeImageURL,
+        webformatURL,
+        likes,
+        views,
+        comments,
+        downloads,
+        tags,
+      }) => {
+        return `  
       
       <div class="photo-card">
-      <a href="${largeImageURL}"><img src="${webformatURL}" alt="" title=""/>
-      <a href="images/image2.jpg"><img src="images/thumbs/thumb2.jpg" alt="" title="Beautiful Image"/></a>
+      <a href="${largeImageURL}"><img src="${webformatURL}" alt="${tags}" title=""/>
     </a>
       <div class="info">
         <p class="info-item">
@@ -84,10 +109,7 @@ function getMurkup(err) {
           <b>Downloads: ${downloads}</b>
         </p>
       </div>
-    </div>
-    
-      
-   
+    </div>   
     `;
       }
     )
@@ -102,4 +124,24 @@ function getMurkup(err) {
 
 function LoadMore(img) {
   getImages(img);
+}
+
+function LoadMoreBtn(res) {
+  if (!res.length) {
+    return Notiflix.Notify.warning(
+      'Sorry, there are no images matching your search query. Please try again.'
+    );
+
+    loadMore.classList.add('is-hidden');
+  } else {
+    setTimeout(() => {
+      loadMore.classList.remove('is-hidden');
+    }, 1000);
+  }
+}
+
+function totalPages(elements, elemOnPage) {
+  let total = Math.round(elements / elemOnPage);
+  console.log(total);
+  return total;
 }
