@@ -128,11 +128,10 @@ function LoadMore(img) {
 
 function LoadMoreBtn(res) {
   if (!res.length) {
+    loadMore.classList.add('is-hidden');
     return Notiflix.Notify.warning(
       'Sorry, there are no images matching your search query. Please try again.'
     );
-
-    loadMore.classList.add('is-hidden');
   } else {
     setTimeout(() => {
       loadMore.classList.remove('is-hidden');
