@@ -60,7 +60,7 @@ async function getImages(img) {
 
     let endPage = totalPages(totalHits, perPage);
 
-    if (page > endPage) {
+    if (page > endPage && page > 2) {
       Notiflix.Notify.failure(
         "We're sorry, but you've reached the end of search results."
       );
